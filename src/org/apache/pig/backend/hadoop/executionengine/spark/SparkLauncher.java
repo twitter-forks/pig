@@ -7,6 +7,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -55,8 +57,7 @@ import org.apache.pig.tools.pigstats.SparkStats;
 
 import spark.RDD;
 import spark.SparkContext;
-
-import com.google.common.collect.Lists;
+import spark.api.java.JavaSparkContext;
 
 /**
  * @author billg
@@ -139,7 +140,7 @@ public class SparkLauncher extends Launcher {
             String[] sparkJars = sparkJarsSetting == null ? new String[]{} : sparkJarsSetting.split(",");
 
             // TODO: Don't hardcode this JAR
-            List<String> jars = Lists.asList("build/pig-0.12.0-SNAPSHOT-withdependencies.jar", sparkJars);
+            List<String> jars = Lists.asList("build/pig-0.12.0-SNAPSHOT-withouthadoop.jar", sparkJars);
 
             if (!master.startsWith("local")) {
                 // Check that we have the Mesos native library and Spark home are set
@@ -164,7 +165,8 @@ public class SparkLauncher extends Launcher {
             }
             System.setProperty("spark.cores.max", "" + maxCores);
 
-            sparkContext = new SparkContext(master, "Spork", sparkHome, SparkUtil.toScalaSeq(jars));
+            JavaSparkContext javaContext = new JavaSparkContext(master, "Spork", sparkHome, jars.toArray(new String[jars.size()]));
+            sparkContext = javaContext.sc();
             cacheConverter = new CacheConverter();
         }
     }
